@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NSE Stock Heatmap</title>
+
+<style>
+    body {
+        background: #121212;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        padding: 30px;
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    #heatmap {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    .box {
+        padding: 35px 20px;
+        border-radius: 12px;
+        font-size: 18px;
+        text-align: center;
+        font-weight: bold;
+        color: #fff;
+        transition: 0.3s;
+    }
+    .box:hover {
+        transform: scale(1.07);
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    }
+</style>
+</head>
+
+<body>
+<h1>NSE Stock Heatmap</h1>
+
+<div id="heatmap"></div>
+
+<script>
+const stocks = ["RELIANCE.NS", "TCS.NS", "INFY.NS"];
+
+async function loadHeatmap() {
+    const container = document.getElementById("heatmap");
+
+    for (let stock of stocks) {
+        const url =
+            `https://query1.finance.yahoo.com/v8/finance/chart/${stock}?interval=1d`;
+
+        try {
+            let data = await fetch(url).then(r => r.json());
+            let result = data.chart.result[0];
+
+            let open = result.meta.chartPreviousClose;
+            let close = result.indicators.quote[0].close.pop();
+            let change = ((close - open) / open * 100).toFixed(2);
+
+            let intensity = Math.min(Math.abs(change) / 5, 1);
+            let bg = change >= 0
+                ? `rgba(0, 180, 0, ${0.3 + intensity})`
+                : `rgba(200, 0, 0, ${0.3 + intensity})`;
+
+            container.innerHTML += `
+                <div class="box" style="background:${bg}">
+                    ${stock}<br>
+                    ${change}% 
+                </div>
+            `;
+        } catch (error) {
+            console.error("Error loading data for", stock, error);
+        }
+    }
+}
+
+loadHeatmap();
+</script>
+
+</body>
+</html>
